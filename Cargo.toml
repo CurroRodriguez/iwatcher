@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "Cross-platform CLI file watcher that re-runs a command on every file change"
 license = "MIT"
-repository = "https://github.com/CurroRodriguez/watcher"
+repository = "https://github.com/CurroRodriguez/iwatcher"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
