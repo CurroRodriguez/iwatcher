@@ -1,9 +1,9 @@
-# watchr
+# iwatchr
 
 A lightweight, cross-platform CLI file watcher. Point it at one or more directories and it will re-run a command every time a file change is detected.
 
 ```
-watchr ./src "cargo test"
+iwatchr ./src "cargo test"
 ```
 
 ---
@@ -34,7 +34,7 @@ cargo install --path .
 ### Cargo
 
 ```sh
-cargo install watchr
+cargo install iwatchr
 ```
 
 ---
@@ -42,27 +42,27 @@ cargo install watchr
 ## Usage
 
 ```
-watchr [OPTIONS] [PATHS]... [COMMAND]
+iwatchr [OPTIONS] [PATHS]... [COMMAND]
 ```
 
 The simplest form passes directories and the command as positional arguments. The **last** positional argument is always treated as the command to run:
 
 ```sh
-watchr ./src "cargo test"
-watchr ./src ./lib "cargo build"
+iwatchr ./src "cargo test"
+iwatchr ./src ./lib "cargo build"
 ```
 
 Use `--exec` when the command contains multiple positional-looking words or when you prefer explicit flags:
 
 ```sh
-watchr --watch ./src --exec "cargo test"
-watchr --watch ./src --watch ./lib --exec "make all"
+iwatchr --watch ./src --exec "cargo test"
+iwatchr --watch ./src --watch ./lib --exec "make all"
 ```
 
 You can mix positional directories with `--watch` flags:
 
 ```sh
-watchr ./src --watch ./assets "npm run build"
+iwatchr ./src --watch ./assets "npm run build"
 ```
 
 ---
@@ -85,31 +85,31 @@ watchr ./src --watch ./assets "npm run build"
 ### Run tests on every source change
 
 ```sh
-watchr ./src "cargo test"
+iwatchr ./src "cargo test"
 ```
 
 ### Rebuild on changes in multiple directories
 
 ```sh
-watchr --watch ./src --watch ./lib --exec "cargo build"
+iwatchr --watch ./src --watch ./lib --exec "cargo build"
 ```
 
 ### Faster debounce for interactive workflows
 
 ```sh
-watchr --debounce 100 ./src "cargo check"
+iwatchr --debounce 100 ./src "cargo check"
 ```
 
 ### Ignore generated and temporary files
 
 ```sh
-watchr --ignore "**/*.log" --ignore "dist/**" ./src "npm run build"
+iwatchr --ignore "**/*.log" --ignore "dist/**" ./src "npm run build"
 ```
 
 ### Watch the current directory
 
 ```sh
-watchr . "make"
+iwatchr . "make"
 ```
 
 ---

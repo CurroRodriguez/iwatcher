@@ -78,8 +78,8 @@ jobs:
       - name: Package — Unix (tar.gz)
         if: runner.os != 'Windows'
         run: |
-          BINARY=target/${{ matrix.target }}/release/watchr
-          ARCHIVE=watchr-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
+          BINARY=target/${{ matrix.target }}/release/iwatchr
+          ARCHIVE=iwatchr-${{ github.ref_name }}-${{ matrix.target }}.tar.gz
           tar -czf "$ARCHIVE" -C "$(dirname $BINARY)" "$(basename $BINARY)"
           echo "ASSET=$ARCHIVE" >> "$GITHUB_ENV"
         shell: bash
@@ -87,8 +87,8 @@ jobs:
       - name: Package — Windows (zip)
         if: runner.os == 'Windows'
         run: |
-          $binary = "target\${{ matrix.target }}\release\watchr.exe"
-          $archive = "watchr-${{ github.ref_name }}-${{ matrix.target }}.zip"
+          $binary = "target\${{ matrix.target }}\release\iwatchr.exe"
+          $archive = "iwatchr-${{ github.ref_name }}-${{ matrix.target }}.zip"
           Compress-Archive -Path $binary -DestinationPath $archive
           "ASSET=$archive" | Out-File -FilePath $env:GITHUB_ENV -Append
         shell: pwsh

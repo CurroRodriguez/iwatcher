@@ -74,7 +74,7 @@ pub fn execute_command(command: &str) {
             let _ = child.wait();
         }
         Err(e) => {
-            eprintln!("[watchr] Failed to run command: {e}");
+            eprintln!("[iwatchr] Failed to run command: {e}");
         }
     }
 }
@@ -112,15 +112,15 @@ mod tests {
     #[test]
     fn execute_command_handles_bad_command_gracefully() {
         // Should log to stderr but not panic.
-        execute_command("__watchr_nonexistent_xyz_command__");
+        execute_command("__iwatchr_nonexistent_xyz_command__");
     }
 
     #[test]
     fn execute_command_runs_echo() {
         #[cfg(unix)]
-        execute_command("echo watchr_unit_test");
+        execute_command("echo iwatchr_unit_test");
         #[cfg(windows)]
-        execute_command("echo watchr_unit_test");
+        execute_command("echo iwatchr_unit_test");
     }
 
     // ── maybe_run ───────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn runner_processes_event_without_panic() {
         let (tx, rx) = mpsc::channel();
-        start(rx, "echo watchr_debounce_test".to_string(), 50);
+        start(rx, "echo iwatchr_debounce_test".to_string(), 50);
         tx.send(()).unwrap();
         // Give the debounce + command time to complete.
         thread::sleep(Duration::from_millis(400));
@@ -183,7 +183,7 @@ mod tests {
         // Send many events in quick succession — only one command invocation
         // should fire after the debounce window. We verify no panic/deadlock.
         let (tx, rx) = mpsc::channel();
-        start(rx, "echo watchr_burst_test".to_string(), 100);
+        start(rx, "echo iwatchr_burst_test".to_string(), 100);
 
         for _ in 0..20 {
             tx.send(()).unwrap();

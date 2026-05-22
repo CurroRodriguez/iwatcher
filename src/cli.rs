@@ -5,7 +5,7 @@ use clap::Parser;
 /// CLI arguments parsed by clap.
 #[derive(Parser, Debug)]
 #[command(
-    name = "watchr",
+    name = "iwatchr",
     about = "Watch directories and run a command on every file change",
     long_about = None
 )]
@@ -90,7 +90,7 @@ mod tests {
     use super::*;
 
     fn parse(args: &[&str]) -> Args {
-        Args::try_parse_from(std::iter::once("watchr").chain(args.iter().copied())).unwrap()
+        Args::try_parse_from(std::iter::once("iwatchr").chain(args.iter().copied())).unwrap()
     }
 
     #[test]
@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn error_when_no_command_and_no_exec() {
         // Zero positional args, no --exec
-        let args = Args::try_parse_from(["watchr"]).unwrap();
+        let args = Args::try_parse_from(["iwatchr"]).unwrap();
         assert!(args.resolve().is_err());
     }
 
@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn error_message_mentions_exec_or_positional() {
-        let args = Args::try_parse_from(["watchr"]).unwrap();
+        let args = Args::try_parse_from(["iwatchr"]).unwrap();
         let err = args.resolve().unwrap_err();
         assert!(err.contains("--exec") || err.contains("positional"));
     }

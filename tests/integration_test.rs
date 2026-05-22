@@ -1,4 +1,4 @@
-//! Integration tests for watchr.
+//! Integration tests for iwatchr.
 //!
 //! These tests exercise the public API end-to-end: CLI resolution, the
 //! filesystem watcher, and the command runner.
@@ -10,13 +10,13 @@ use std::thread;
 use std::time::Duration;
 
 use tempfile::TempDir;
-use watchr::cli::Args;
-use watchr::{runner, watcher};
+use iwatchr::cli::Args;
+use iwatchr::{runner, watcher};
 
 // ── CLI resolution ───────────────────────────────────────────────────────────
 
 fn parse(args: &[&str]) -> Args {
-    Args::try_parse_from(std::iter::once("watchr").chain(args.iter().copied())).unwrap()
+    Args::try_parse_from(std::iter::once("iwatchr").chain(args.iter().copied())).unwrap()
 }
 
 use clap::Parser;
@@ -71,7 +71,7 @@ fn cli_user_ignore_patterns_are_preserved() {
 
 #[test]
 fn cli_error_on_missing_command() {
-    let args = Args::try_parse_from(["watchr"]).unwrap();
+    let args = Args::try_parse_from(["iwatchr"]).unwrap();
     assert!(args.resolve().is_err());
 }
 
@@ -195,7 +195,7 @@ fn runner_skips_while_command_running() {
     // Send two events quickly so the second arrives while the first run is
     // still in progress. We verify no panic and the runner stays responsive.
     let (tx, rx) = mpsc::channel();
-    runner::start(rx, "echo watchr_skip_test".to_string(), 30);
+    runner::start(rx, "echo iwatchr_skip_test".to_string(), 30);
 
     tx.send(()).unwrap();
     thread::sleep(Duration::from_millis(10)); // before debounce expires
@@ -208,7 +208,7 @@ fn runner_skips_while_command_running() {
 #[test]
 fn runner_handles_rapid_burst_of_events() {
     let (tx, rx) = mpsc::channel();
-    runner::start(rx, "echo watchr_burst".to_string(), 50);
+    runner::start(rx, "echo iwatchr_burst".to_string(), 50);
 
     for _ in 0..50 {
         let _ = tx.send(());
