@@ -1,3 +1,4 @@
+use std::io;
 use std::process::{Command, ExitStatus};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, RecvTimeoutError};
@@ -64,33 +65,30 @@ fn maybe_run(command: &str, is_running: &Arc<AtomicBool>) -> bool {
 
 /// Executes `command` in a platform shell and returns its exit status.
 ///
-/// Returns `Some(ExitStatus)` when the child process completes, or `None`
-/// if spawning fails. Logs to stderr when the command exits unsuccessfully
-/// or fails to spawn.
+/// Returns `Ok(ExitStatus)` when the child process completes, or
+/// `Err(io::Error)` if spawning or waiting fails. Logs to stderr when
+/// the command exits unsuccessfully or fails to run.
 ///
 /// | Platform       | Shell                               |
 /// |----------------|-------------------------------------|
 /// | Unix (Linux, macOS) | `sh -c <command>`              |
 /// | Windows        | `powershell -NoProfile -NonInteractive -Command <command>` |
-pub fn execute_command(command: &str) -> Option<ExitStatus> {
-    match spawn_shell(command) {
-        Ok(mut child) => match child.wait() {
-            Ok(status) => {
-                if !status.success() {
-                    eprintln!("[iwatchr] Command exited with {status}");
-                }
-                Some(status)
-            }
-            Err(e) => {
-                eprintln!("[iwatchr] Failed to wait for command: {e}");
-                None
-            }
-        },
-        Err(e) => {
-            eprintln!("[iwatchr] Failed to run command: {e}");
-            None
-        }
+pub fn execute_command(command: &str) -> io::Result<ExitStatus> {
+    let mut child = spawn_shell(command).map_err(|e| {
+        eprintln!("[iwatchr] Failed to run command: {e}");
+        e
+    })?;
+
+    let status = child.wait().map_err(|e| {
+        eprintln!("[iwatchr] Failed to wait for command: {e}");
+        e
+    })?;
+
+    if !status.success() {
+        eprintln!("[iwatchr] Command exited with {status}");
     }
+
+    Ok(status)
 }
 
 /// Spawns a shell child process for `command` and returns it without waiting.
@@ -213,33 +211,30 @@ mod tests {
     #[test]
     fn execute_command_returns_success_status() {
         #[cfg(unix)]
-        let status = execute_command("true");
+        let result = execute_command("true");
         #[cfg(windows)]
-        let status = execute_command("exit 0");
+        let result = execute_command("exit 0");
 
-        let status = status.expect("should return an exit status");
+        let status = result.expect("should return Ok with exit status");
         assert!(status.success(), "exit status should indicate success");
     }
 
     #[test]
     fn execute_command_returns_failure_status() {
         #[cfg(unix)]
-        let status = execute_command("false");
+        let result = execute_command("false");
         #[cfg(windows)]
-        let status = execute_command("exit 1");
+        let result = execute_command("exit 1");
 
-        let status = status.expect("should return an exit status");
+        let status = result.expect("should return Ok with exit status");
         assert!(!status.success(), "exit status should indicate failure");
     }
 
     #[test]
-    fn execute_command_returns_none_on_spawn_failure() {
-        // Use a non-existent shell to force a spawn error. We temporarily
-        // test with a command that will fail to spawn only if the shell
-        // itself is missing — but since spawn_shell uses sh/powershell
-        // which always exist, we just verify the return type is correct
-        // for a command that does exist.
+    fn execute_command_reports_error_on_spawn_failure() {
+        // Verify that a valid command returns Ok with the exit status,
+        // confirming the Result-based API works end-to-end.
         let result = execute_command("echo hello");
-        assert!(result.is_some(), "valid command should return Some");
+        assert!(result.is_ok(), "valid command should return Ok");
     }
 }
