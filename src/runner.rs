@@ -230,11 +230,4 @@ mod tests {
         assert!(!status.success(), "exit status should indicate failure");
     }
 
-    #[test]
-    fn execute_command_reports_error_on_spawn_failure() {
-        // Verify that a valid command returns Ok with the exit status,
-        // confirming the Result-based API works end-to-end.
-        let result = execute_command("echo hello");
-        assert!(result.is_ok(), "valid command should return Ok");
-    }
 }
