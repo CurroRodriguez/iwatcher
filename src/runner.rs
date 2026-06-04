@@ -56,14 +56,8 @@ fn maybe_run(command: &str, is_running: &Arc<AtomicBool>) -> bool {
     let is_running = Arc::clone(is_running);
     let cmd = command.to_string();
     thread::spawn(move || {
-        match execute_command(&cmd) {
-            Ok(status) if !status.success() => {
-                eprintln!("[iwatchr] Command exited with {status}");
-            }
-            Err(e) => {
-                eprintln!("[iwatchr] Failed to run command: {e}");
-            }
-            _ => {}
+        if let Err(e) = execute_command(&cmd) {
+            eprintln!("[iwatchr] {e}");
         }
         is_running.store(false, Ordering::SeqCst);
     });
@@ -73,8 +67,9 @@ fn maybe_run(command: &str, is_running: &Arc<AtomicBool>) -> bool {
 
 /// Executes `command` in a platform shell and returns its exit status.
 ///
-/// Returns `Ok(ExitStatus)` when the child process completes, or
-/// `Err(io::Error)` if spawning or waiting fails.
+/// Returns `Ok(ExitStatus)` when the command succeeds (zero exit code), or
+/// `Err(io::Error)` if spawning fails, waiting fails, or the command exits
+/// with a non-zero status.
 ///
 /// | Platform       | Shell                               |
 /// |----------------|-------------------------------------|
@@ -82,7 +77,16 @@ fn maybe_run(command: &str, is_running: &Arc<AtomicBool>) -> bool {
 /// | Windows        | `powershell -NoProfile -NonInteractive -Command <command>` |
 pub fn execute_command(command: &str) -> io::Result<ExitStatus> {
     let mut child = spawn_shell(command)?;
-    child.wait()
+    let status = child.wait()?;
+
+    if !status.success() {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("command exited with {status}"),
+        ));
+    }
+
+    Ok(status)
 }
 
 /// Spawns a shell child process for `command` and returns it without waiting.
@@ -214,18 +218,21 @@ mod tests {
     fn execute_command_returns_failure_status() {
         let result = execute_command("exit 1");
 
-        let status = result.expect("should return Ok with exit status");
-        assert!(!status.success(), "exit status should indicate failure");
+        assert!(result.is_err(), "non-zero exit should return Err");
+        let err = result.unwrap_err();
+        assert!(
+            err.to_string().contains("exited with"),
+            "error message should describe the exit status, got: {err}"
+        );
     }
 
     #[test]
-    fn execute_command_reports_failure_for_invalid_command() {
+    fn execute_command_returns_error_for_invalid_command() {
         let result = execute_command("eco hello");
 
-        let status = result.expect("should return Ok even for invalid commands");
         assert!(
-            !status.success(),
-            "invalid command should produce a non-zero exit status"
+            result.is_err(),
+            "invalid command should return Err, not Ok"
         );
     }
 }
