@@ -204,10 +204,7 @@ mod tests {
 
     #[test]
     fn execute_command_returns_success_status() {
-        #[cfg(unix)]
-        let result = execute_command("true");
-        #[cfg(windows)]
-        let result = execute_command("exit 0");
+        let result = execute_command("echo test");
 
         let status = result.expect("should return Ok with exit status");
         assert!(status.success(), "exit status should indicate success");
@@ -215,9 +212,6 @@ mod tests {
 
     #[test]
     fn execute_command_returns_failure_status() {
-        #[cfg(unix)]
-        let result = execute_command("false");
-        #[cfg(windows)]
         let result = execute_command("exit 1");
 
         let status = result.expect("should return Ok with exit status");
