@@ -56,7 +56,15 @@ fn maybe_run(command: &str, is_running: &Arc<AtomicBool>) -> bool {
     let is_running = Arc::clone(is_running);
     let cmd = command.to_string();
     thread::spawn(move || {
-        execute_command(&cmd);
+        match execute_command(&cmd) {
+            Ok(status) if !status.success() => {
+                eprintln!("[iwatchr] Command exited with {status}");
+            }
+            Err(e) => {
+                eprintln!("[iwatchr] Failed to run command: {e}");
+            }
+            _ => {}
+        }
         is_running.store(false, Ordering::SeqCst);
     });
 
@@ -66,29 +74,15 @@ fn maybe_run(command: &str, is_running: &Arc<AtomicBool>) -> bool {
 /// Executes `command` in a platform shell and returns its exit status.
 ///
 /// Returns `Ok(ExitStatus)` when the child process completes, or
-/// `Err(io::Error)` if spawning or waiting fails. Logs to stderr when
-/// the command exits unsuccessfully or fails to run.
+/// `Err(io::Error)` if spawning or waiting fails.
 ///
 /// | Platform       | Shell                               |
 /// |----------------|-------------------------------------|
 /// | Unix (Linux, macOS) | `sh -c <command>`              |
 /// | Windows        | `powershell -NoProfile -NonInteractive -Command <command>` |
 pub fn execute_command(command: &str) -> io::Result<ExitStatus> {
-    let mut child = spawn_shell(command).map_err(|e| {
-        eprintln!("[iwatchr] Failed to run command: {e}");
-        e
-    })?;
-
-    let status = child.wait().map_err(|e| {
-        eprintln!("[iwatchr] Failed to wait for command: {e}");
-        e
-    })?;
-
-    if !status.success() {
-        eprintln!("[iwatchr] Command exited with {status}");
-    }
-
-    Ok(status)
+    let mut child = spawn_shell(command)?;
+    child.wait()
 }
 
 /// Spawns a shell child process for `command` and returns it without waiting.
