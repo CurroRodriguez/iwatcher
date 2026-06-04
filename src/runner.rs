@@ -218,4 +218,14 @@ mod tests {
         assert!(!status.success(), "exit status should indicate failure");
     }
 
+    #[test]
+    fn execute_command_reports_failure_for_invalid_command() {
+        let result = execute_command("eco hello");
+
+        let status = result.expect("should return Ok even for invalid commands");
+        assert!(
+            !status.success(),
+            "invalid command should produce a non-zero exit status"
+        );
+    }
 }
